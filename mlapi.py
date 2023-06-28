@@ -1,17 +1,29 @@
-#bring in lightweight dependencies 
 from fastapi import FastAPI
 from pydantic import BaseModel
 import pickle
 import pandas as pd
+from fastapi.middleware.cors import CORSMiddleware
 
-app=FastAPI()
+app = FastAPI()
 
-class input(BaseModel):
+# Configure CORS
+
+origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+class Input(BaseModel):
     age: float
     blood_pressure: float
-    specific_gravity:float
-    albumin:float
-    sugar:float
+    specific_gravity: float
+    albumin: float
+    sugar: float
     red_blood_cells: int
     pus_cell: int
     pus_cell_clumps: int
@@ -32,11 +44,11 @@ class input(BaseModel):
     peda_edema: int
     aanemia: int
 
-with open('kidney.pkl','rb') as f:
+with open('kidney.pkl', 'rb') as f:
     model = pickle.load(f)
 
 @app.post('/')
-async def scoring_endpoint(item:input):
-    df=pd.DataFrame([item.dict().values()],columns=item.dict().keys())
+async def scoring_endpoint(item: Input):
+    df = pd.DataFrame([item.dict()])
     response = model.predict(df)
-    return {"prediction":int(response)}
+    return {"prediction": int(response)}
